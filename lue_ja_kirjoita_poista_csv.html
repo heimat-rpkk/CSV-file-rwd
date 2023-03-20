@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PHP kirjoittaa/lukee/poistaa tiedostosta</title>
+</head>
+<body>
+    <h1>CSV-tiedoston käsittely PHP:lla. </h1>
+    <p>Luku - kirjoitus - poisto.</p>
+    <h3>Syötä henkilötiedot:</h3> 
+
+    <form action="" method="post" style="background-color: #ddd;"> 
+
+      <label for="nimi">Nimi:</label> 
+
+      <input type="text" id="nimi" name="nimi"><br><br> 
+
+      <label for="ika">Ikä:</label> 
+
+      <input type="number" id="ika" name="ika"><br><br> 
+
+      <button type="button" onclick="tallenna()">Tallenna</button> 
+
+      <br><br><br>
+      <label for="poisto">Poistettavan rivin numero:</label> 
+
+      <input type="number" id="poisto" name="poisto"><br><br> 
+
+      <button type="button" onclick="poista()">Poista</button> 
+
+    </form> 
+    <h3>Syötetyt tiedot</h3>
+    <div id="csv" style="background-color: pink;"></div>
+
+    <script> 
+      //tietojen kirjoitus tiedostoon
+      async function tallenna() { 
+        // hae tiedot lomakkeesta
+        const nimi = document.getElementById("nimi").value; 
+        const ika = document.getElementById("ika").value; 
+
+        try { 
+          //POST-metodi lähettää tiedot
+          const response = await fetch("write_csv.php", { 
+            method: "POST", 
+            headers: { "Content-Type": "application/json" }, 
+            body: JSON.stringify({ "nimi": nimi, "ika": ika }), 
+          }); 
+          //tarkistetaan vastaus
+          if (response.ok) { 
+            alert("Tiedot tallennettu!"); 
+          } else { 
+            throw new Error("Tallennus epäonnistui."); 
+          } 
+        } catch (error) { 
+          console.error(error); 
+          alert("Tallennus epäonnistui."); 
+        } 
+        lue(); // päivitetään tiedot sivulle
+      } 
+
+      //tietojen luku tiedostosta
+      async function lue() { 
+        try { 
+          //GET-metodi hakee tiedot
+          const response = await fetch("read_csv.php", { 
+            method: "GET", 
+            headers: { "Content-Type": "application/json" }, 
+          }); 
+          //tarkistetaan vastaus
+          if (response.ok) { 
+            const data = await response.json(); 
+            console.log(data); 
+            // kirjoitetaan data html-sivulle
+            let html = "";
+            data.forEach(element => { // Muutettu rivi
+                html += (`<p><strong>Nimi:</strong> ${element.nimi}, <strong>ikä:</strong> ${element.ika}</p>`);
+            });
+            document.querySelector("#csv").innerHTML = html;
+          } else { 
+            throw new Error("Luku epäonnistui."); 
+          } 
+        } catch (error) { 
+          console.error(error); 
+          alert("Lukeminen epäonnistui."); 
+        } 
+      } 
+      lue();
+
+      //tietojen poisto tiedostosta
+      async function poista() { 
+        // hae tiedot lomakkeesta
+        const poistettava_rivi = Number(document.getElementById("poisto").value); 
+        
+        try { 
+          // DELETE-metodi poistaa yhden rivin
+          const response = await fetch("poista_rivi_csv.php", { 
+            method: "DELETE", 
+            headers: { "Content-Type": "application/json" }, 
+            body: JSON.stringify({ "poistettava_rivi": poistettava_rivi }), 
+          });
+          //tarkistetaan vastaus
+          if (response.ok) { 
+            alert("Rivi poistettu!"); 
+          } else { 
+            throw new Error("Poisto epäonnistui."); 
+          } 
+        } catch (error) { 
+          console.error(error); 
+          alert("Poistaminen epäonnistui."); 
+        } 
+        lue(); // päivitetään tiedot sivulle
+      } 
+    </script> 
+    
+</body>
+</html>
